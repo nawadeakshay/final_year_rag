@@ -1,31 +1,67 @@
-# Virtual environment — very large, don't upload
+# Virtual environment
 venv/
 env/
 .venv/
 
-# Your secret API key — NEVER upload this
+# Secrets
 .env
 
-# Python cache files — not needed
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
 
-# The built indexes — large binary files, rebuilt via ingestion
+# Vector DB / Generated files
 vector_store/
 bm25_index.pkl
+*.pkl
+*.faiss
+*.index
 
-# The actual HR documents — may be confidential
+# Documents (confidential)
 documents/
 
-# VS Code settings
+# IDE
 .vscode/
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
 
-# Jupyter notebook checkpoints
+# Jupyter
+.ipynb_checkpoints/# Virtual environment
+venv/
+env/
+.venv/
+
+# Secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Vector DB / Generated files
+vector_store/
+bm25_index.pkl
+*.pkl
+*.faiss
+*.index
+
+# Documents (confidential)
+documents/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
 .ipynb_checkpoints/
