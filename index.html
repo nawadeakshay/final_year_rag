@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HR Policy Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Design Tokens ─── */
+    :root {
+      --bg:          #0d1117;
+      --bg-card:     #161b22;
+      --bg-input:    #1c2128;
+      --border:      #30363d;
+      --border-soft: #21262d;
+      --accent:      #58a6ff;
+      --accent-dim:  #1f6feb33;
+      --accent-glow: #58a6ff22;
+      --text:        #e6edf3;
+      --text-muted:  #8b949e;
+      --text-dim:    #6e7681;
+      --green:       #3fb950;
+      --green-dim:   #238636;
+      --orange:      #d29922;
+      --red:         #f85149;
+      --user-bubble: #1f6feb;
+      --ai-bubble:   #161b22;
+      --serif:       'DM Serif Display', Georgia, serif;
+      --sans:        'DM Sans', system-ui, sans-serif;
+      --radius:      10px;
+      --radius-lg:   16px;
+      --shadow:      0 8px 32px rgba(0,0,0,.45);
+    }
+
+    /* ─── Reset ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ─── Grid noise texture ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, #1f6feb18 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Layout ─── */
+    #app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ─── Header ─── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border-soft);
+      background: rgba(13,17,23,.85);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #1f6feb, #388bfd);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px #1f6feb44;
+    }
+
+    .header-title h1 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: 0.01em;
+    }
+
+    .header-title p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 300;
+      margin-top: 1px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Status pill */
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 500;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      cursor: default;
+      transition: border-color .2s;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: background .3s;
+    }
+
+    .status-pill.ok .status-dot      { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-pill.ok                   { border-color: #238636; }
+    .status-pill.error .status-dot   { background: var(--red); }
+    .status-pill.error                { border-color: #6e2828; }
+    .status-pill.warning .status-dot { background: var(--orange); }
+
+    .btn-icon {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-icon:hover { background: var(--bg-input); color: var(--text); border-color: var(--accent); }
+
+    /* ─── Main content area ─── */
+    main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ─── Sidebar ─── */
+    aside {
+      width: 260px;
+      border-right: 1px solid var(--border-soft);
+      background: rgba(22,27,34,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-section-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text-dim);
+      padding: 0 4px;
+    }
+
+    /* Suggested questions */
+    .suggestion-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      color: var(--text-muted);
+      font-family: var(--sans);
+      font-size: 12.5px;
+      line-height: 1.4;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+
+    .suggestion-btn:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    /* Stats card */
+    .stats-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .stat-label { color: var(--text-muted); }
+    .stat-value { color: var(--text); font-weight: 500; font-feature-settings: 'tnum'; }
+    .stat-value.accent { color: var(--accent); }
+
+    .btn-ingest {
+      width: 100%;
+      padding: 9px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all .15s;
+    }
+    .btn-ingest:hover { background: var(--green-dim); border-color: var(--green); color: #fff; }
+    .btn-ingest:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ─── Chat area ─── */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* Messages */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      scroll-behavior: smooth;
+    }
+
+    #messages::-webkit-scrollbar { width: 6px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Empty state */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+      padding: 40px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      opacity: .4;
+      filter: grayscale(.4);
+    }
+
+    .empty-state h2 {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Message bubbles */
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 820px;
+      width: 100%;
+      animation: fadeSlide .25s ease both;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.assistant { align-self: flex-start; }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .message.user .avatar     { background: var(--user-bubble); }
+    .message.assistant .avatar { background: var(--bg-card); border: 1px solid var(--border); }
+
+    .bubble {
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1.65;
+      max-width: calc(100% - 44px);
+    }
+
+    .message.user .bubble {
+      background: var(--user-bubble);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant .bubble {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    /* Fallback bubble */
+    .message.assistant.fallback .bubble {
+      border-color: #6e282820;
+      background: #f8514910;
+    }
+
+    /* Sources */
+    .sources-toggle {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--sans);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sources-toggle:hover { text-decoration: underline; }
+
+    .sources-panel {
+      margin-top: 8px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sources-panel.open { display: flex; }
+
+    .source-item {
+      background: var(--bg-input);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    .source-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+
+    .source-doc {
+      font-weight: 600;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    .source-score {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      padding: 2px 6px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .source-meta {
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .source-excerpt {
+      color: var(--text-dim);
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* Meta row under AI bubble */
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .confidence-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--border);
+      width: 60px;
+      overflow: hidden;
+    }
+    .confidence-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--green);
+      transition: width .4s ease;
+    }
+
+    /* Typing indicator */
+    .typing-dots {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      padding: 4px 0;
+    }
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      animation: bounce .9s infinite ease-in-out;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .18s; }
+    .typing-dots span:nth-child(3) { animation-delay: .36s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(.7); opacity: .5; }
+      40%            { transform: scale(1);  opacity: 1; }
+    }
+
+    /* ─── Input bar ─── */
+    .input-bar {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-soft);
+      background: rgba(13,17,23,.9);
+      backdrop-filter: blur(8px);
+      flex-shrink: 0;
+    }
+
+    .input-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 10px 14px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .input-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    #question {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.5;
+      resize: none;
+      min-height: 24px;
+      max-height: 140px;
+      padding: 0;
+    }
+
+    #question::placeholder { color: var(--text-dim); }
+
+    #send-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #0d1117;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: background .15s, transform .1s;
+    }
+
+    #send-btn:hover   { background: #79c0ff; }
+    #send-btn:active  { transform: scale(.93); }
+    #send-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; transform: none; }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* ─── Toast ─── */
+    #toast {
+      position: fixed;
+      bottom: 90px;
+      right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+      max-width: 340px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { border-color: var(--green); }
+    #toast.error   { border-color: var(--red); }
+
+    /* ─── Scrollbar ─── */
+    aside::-webkit-scrollbar { width: 4px; }
+    aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 700px) {
+      aside { display: none; }
+      #messages { padding: 16px; }
+      .input-bar { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="header-left">
+      <div class="logo-icon">🏛️</div>
+      <div class="header-title">
+        <h1>HR Policy Assistant</h1>
+        <p>Enterprise Knowledge Base · Powered by LLaMA 3</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-pill" id="status-pill" title="Pipeline status">
+        <div class="status-dot"></div>
+        <span id="status-text">Connecting…</span>
+      </div>
+      <button class="btn-icon" id="clear-btn" title="Clear conversation">🗑</button>
+    </div>
+  </header>
+
+  <!-- ── Main ── -->
+  <main>
+
+    <!-- ── Sidebar ── -->
+    <aside>
+      <div class="sidebar-section-label">Suggested Questions</div>
+
+      <button class="suggestion-btn" data-q="What is the company's annual leave policy?">
+        📅 What is the annual leave policy?
+      </button>
+      <button class="suggestion-btn" data-q="How many sick leave days am I entitled to per year?">
+        🤒 How many sick leave days per year?
+      </button>
+      <button class="suggestion-btn" data-q="What is the remote work policy?">
+        🏠 What is the remote work policy?
+      </button>
+      <button class="suggestion-btn" data-q="How do I report a harassment or misconduct complaint?">
+        ⚠️ How do I report misconduct?
+      </button>
+      <button class="suggestion-btn" data-q="What are the rules around employee expenses and reimbursements?">
+        💳 Employee expenses & reimbursements
+      </button>
+      <button class="suggestion-btn" data-q="What is the employee bonus policy?">
+        🎯 What is the bonus policy?
+      </button>
+      <button class="suggestion-btn" data-q="What is the notice period for resignation?">
+        📝 Resignation notice period?
+      </button>
+      <button class="suggestion-btn" data-q="What does the code of conduct say about conflicts of interest?">
+        ⚖️ Code of conduct: conflicts of interest
+      </button>
+
+      <div class="sidebar-section-label" style="margin-top:4px;">System</div>
+
+      <div class="stats-card" id="stats-card">
+        <div class="stat-row">
+          <span class="stat-label">Status</span>
+          <span class="stat-value" id="stat-status">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Chunks</span>
+          <span class="stat-value accent" id="stat-chunks">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Model</span>
+          <span class="stat-value" id="stat-model">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Documents</span>
+          <span class="stat-value" id="stat-docs">—</span>
+        </div>
+      </div>
+
+      <button class="btn-ingest" id="ingest-btn" title="Rebuild search indices from documents">
+        ⚙️ Re-index Documents
+      </button>
+    </aside>
+
+    <!-- ── Chat area ── -->
+    <div class="chat-area">
+      <div id="messages">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">🏛️</div>
+          <h2>How can I help you today?</h2>
+          <p>Ask me anything about company HR policies — leave, benefits, conduct, compensation, and more. I'll answer strictly from official policy documents with full source citations.</p>
+        </div>
+      </div>
+
+      <!-- ── Input bar ── -->
+      <div class="input-bar">
+        <div class="input-wrap">
+          <textarea
+            id="question"
+            placeholder="Ask about leave, benefits, conduct, expenses…"
+            rows="1"
+            autocomplete="off"
+            spellcheck="true"
+          ></textarea>
+          <button id="send-btn" aria-label="Send">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1.724 1.053a.5.5 0 0 0-.714.545l1.403 4.85a.5.5 0 0 0 .397.354l5.69.953c.268.045.268.433 0 .478l-5.69.953a.5.5 0 0 0-.397.354l-1.403 4.85a.5.5 0 0 0 .714.545l13-6.5a.5.5 0 0 0 0-.894l-13-6.5z"/>
+            </svg>
+          </button>
+        </div>
+        <p class="input-hint">Answers grounded in policy documents only · <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for newline</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  // ─── Config ───────────────────────────────────────────────────────────────
+  // FIX: API_BASE auto-detects whether the frontend is served by the FastAPI
+  // server (same origin) or opened as a standalone file / different port.
+  const API_BASE = (() => {
+    const { protocol, hostname, port } = window.location;
+    // If opened as file:// or from a different origin (e.g. VS Code Live Server
+    // on :5500), point to the FastAPI server on :8000.
+    if (protocol === 'file:' || port === '5500' || port === '5173' || port === '3000') {
+      return 'http://localhost:8000';
+    }
+    // Otherwise assume same origin (FastAPI serves the frontend)
+    return '';
+  })();
+
+  // ─── State ────────────────────────────────────────────────────────────────
+  let isLoading = false;
+  let docCount = 0;
+
+  // ─── DOM refs ─────────────────────────────────────────────────────────────
+  const messagesEl  = document.getElementById('messages');
+  const emptyState  = document.getElementById('empty-state');
+  const questionEl  = document.getElementById('question');
+  const sendBtn     = document.getElementById('send-btn');
+  const statusPill  = document.getElementById('status-pill');
+  const statusText  = document.getElementById('status-text');
+  const clearBtn    = document.getElementById('clear-btn');
+  const ingestBtn   = document.getElementById('ingest-btn');
+  const statStatus  = document.getElementById('stat-status');
+  const statChunks  = document.getElementById('stat-chunks');
+  const statModel   = document.getElementById('stat-model');
+  const statDocs    = document.getElementById('stat-docs');
+  const toastEl     = document.getElementById('toast');
+
+  // ─── Toast ────────────────────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg, type = 'info') {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.className = `show ${type}`;
+    toastTimer = setTimeout(() => { toastEl.className = ''; }, 3500);
+  }
+
+  // ─── Auto-resize textarea ─────────────────────────────────────────────────
+  questionEl.addEventListener('input', () => {
+    questionEl.style.height = 'auto';
+    questionEl.style.height = Math.min(questionEl.scrollHeight, 140) + 'px';
+  });
+
+  // ─── Keyboard: Enter sends, Shift+Enter newline ───────────────────────────
+  questionEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  });
+
+  sendBtn.addEventListener('click', handleSubmit);
+  clearBtn.addEventListener('click', clearConversation);
+
+  // ─── Suggested questions ──────────────────────────────────────────────────
+  document.querySelectorAll('.suggestion-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      questionEl.value = btn.dataset.q;
+      questionEl.style.height = 'auto';
+      questionEl.style.height = Math.min(questionEl.scrollHeight, 140) + 'px';
+      handleSubmit();
+    });
+  });
+
+  // ─── Health check ─────────────────────────────────────────────────────────
+  async function pollHealth() {
+    try {
+      const res = await fetch(`${API_BASE}/api/health`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      statusPill.className = `status-pill ${data.status === 'ok' ? 'ok' : 'warning'}`;
+      statusText.textContent = data.status === 'ok' ? 'Ready' : 'Not ready';
+
+      statStatus.textContent = data.status;
+      statStatus.style.color = data.status === 'ok' ? 'var(--green)' : 'var(--orange)';
+      statModel.textContent  = (data.llm_model || '—').replace('llama', 'LLaMA ').replace('-', ' ');
+
+      if (data.retriever && data.retriever.total_chunks) {
+        statChunks.textContent = data.retriever.total_chunks.toLocaleString();
+      } else {
+        statChunks.textContent = data.status === 'ok' ? '—' : 'No index';
+      }
+    } catch {
+      statusPill.className = 'status-pill error';
+      statusText.textContent = 'Offline';
+      statStatus.textContent = 'Unreachable';
+      statStatus.style.color = 'var(--red)';
+    }
+  }
+
+  async function pollDocuments() {
+    try {
+      const res = await fetch(`${API_BASE}/api/documents`);
+      if (!res.ok) return;
+      const docs = await res.json();
+      docCount = docs.length;
+      statDocs.textContent = docs.length === 0 ? 'None' : `${docs.length} file${docs.length !== 1 ? 's' : ''}`;
+    } catch {
+      statDocs.textContent = '—';
+    }
+  }
+
+  // ─── Ingest ───────────────────────────────────────────────────────────────
+  ingestBtn.addEventListener('click', async () => {
+    ingestBtn.disabled = true;
+    ingestBtn.textContent = '⏳ Ingesting…';
+    try {
+      const res = await fetch(`${API_BASE}/api/ingest?force=true`, { method: 'POST' });
+      if (res.ok) {
+        showToast('Re-indexing started. This may take a minute.', 'success');
+        // Poll health every 5s for up to 2 minutes
+        let attempts = 0;
+        const timer = setInterval(async () => {
+          await pollHealth();
+          attempts++;
+          if (attempts >= 24) clearInterval(timer);
+        }, 5000);
+      } else {
+        showToast('Ingestion request failed.', 'error');
+      }
+    } catch {
+      showToast('Could not reach the API.', 'error');
+    } finally {
+      setTimeout(() => {
+        ingestBtn.disabled = false;
+        ingestBtn.textContent = '⚙️ Re-index Documents';
+      }, 3000);
+    }
+  });
+
+  // ─── Message rendering ────────────────────────────────────────────────────
+  function hideEmpty() {
+    if (emptyState) emptyState.style.display = 'none';
+  }
+
+  function appendUserMessage(text) {
+    hideEmpty();
+    const div = document.createElement('div');
+    div.className = 'message user';
+    div.innerHTML = `
+      <div class="avatar">👤</div>
+      <div class="bubble">${escHtml(text)}</div>
+    `;
+    messagesEl.appendChild(div);
+    scrollBottom();
+    return div;
+  }
+
+  function appendTyping() {
+    hideEmpty();
+    const div = document.createElement('div');
+    div.className = 'message assistant';
+    div.innerHTML = `
+      <div class="avatar">🏛️</div>
+      <div class="bubble">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>
+    `;
+    messagesEl.appendChild(div);
+    scrollBottom();
+    return div;
+  }
+
+  function replaceWithAnswer(typingEl, data) {
+    const isFallback = data.fallback_triggered;
+    const confPct    = Math.round((data.confidence || 0) * 100);
+
+    // Build sources HTML
+    let sourcesHtml = '';
+    if (data.sources && data.sources.length > 0) {
+      const items = data.sources.map((s, i) => `
+        <div class="source-item">
+          <div class="source-header">
+            <span class="source-doc">📄 ${escHtml(s.document)}</span>
+            <span class="source-score">Score: ${(s.relevance_score || 0).toFixed(3)}</span>
+          </div>
+          <div class="source-meta">
+            Section: <strong>${escHtml(s.section)}</strong> · Page ${escHtml(String(s.page))}
+          </div>
+          <div class="source-excerpt">"${escHtml((s.excerpt || '').slice(0, 180))}…"</div>
+        </div>
+      `).join('');
+
+      sourcesHtml = `
+        <button class="sources-toggle" onclick="toggleSources(this)">
+          📚 ${data.sources.length} source${data.sources.length !== 1 ? 's' : ''} ▸
+        </button>
+        <div class="sources-panel">${items}</div>
+      `;
+    }
+
+    // Confidence bar colour
+    const barColor = confPct >= 60 ? 'var(--green)' : confPct >= 35 ? 'var(--orange)' : 'var(--red)';
+
+    typingEl.className = `message assistant${isFallback ? ' fallback' : ''}`;
+    typingEl.innerHTML = `
+      <div class="avatar">🏛️</div>
+      <div style="min-width:0; flex:1;">
+        <div class="bubble">
+          ${escHtml(data.answer)}
+          ${sourcesHtml}
+        </div>
+        <div class="msg-meta">
+          <div class="confidence-bar">
+            <div class="confidence-fill" style="width:${confPct}%; background:${barColor};"></div>
+          </div>
+          <span>Confidence ${confPct}%</span>
+          <span>·</span>
+          <span>${Math.round(data.latency_ms || 0)} ms</span>
+          ${isFallback ? '<span>· <em>fallback</em></span>' : ''}
+        </div>
+      </div>
+    `;
+    scrollBottom();
+  }
+
+  function appendErrorMessage(msg) {
+    hideEmpty();
+    const div = document.createElement('div');
+    div.className = 'message assistant fallback';
+    div.innerHTML = `
+      <div class="avatar">⚠️</div>
+      <div class="bubble" style="border-color:#f8514933;">
+        ${escHtml(msg)}
+      </div>
+    `;
+    messagesEl.appendChild(div);
+    scrollBottom();
+  }
+
+  function toggleSources(btn) {
+    const panel = btn.nextElementSibling;
+    panel.classList.toggle('open');
+    btn.textContent = panel.classList.contains('open')
+      ? btn.textContent.replace('▸', '▾')
+      : btn.textContent.replace('▾', '▸');
+  }
+  window.toggleSources = toggleSources; // expose for inline handler
+
+  // ─── Submit ───────────────────────────────────────────────────────────────
+  async function handleSubmit() {
+    const q = questionEl.value.trim();
+    if (!q || isLoading) return;
+
+    isLoading = true;
+    sendBtn.disabled = true;
+    questionEl.value = '';
+    questionEl.style.height = 'auto';
+
+    appendUserMessage(q);
+    const typingEl = appendTyping();
+
+    try {
+      const res = await fetch(`${API_BASE}/api/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q }),
+      });
+
+      if (res.status === 503) {
+        // Pipeline not ready — give a helpful message
+        const err = await res.json().catch(() => ({}));
+        typingEl.remove();
+        appendErrorMessage(
+          (err.detail || 'The pipeline is not ready yet. Please run ingestion first via the "Re-index Documents" button.')
+        );
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        typingEl.remove();
+        appendErrorMessage(`Error ${res.status}: ${err.detail || 'Something went wrong.'}`);
+        return;
+      }
+
+      const data = await res.json();
+      replaceWithAnswer(typingEl, data);
+
+    } catch (err) {
+      typingEl.remove();
+      appendErrorMessage(
+        'Could not reach the API. Make sure the server is running:\n' +
+        'uvicorn api:app --reload --port 8000'
+      );
+    } finally {
+      isLoading = false;
+      sendBtn.disabled = false;
+      questionEl.focus();
+    }
+  }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+  function clearConversation() {
+    messagesEl.innerHTML = '';
+    if (emptyState) {
+      emptyState.style.display = '';
+      messagesEl.appendChild(emptyState);
+    }
+    showToast('Conversation cleared.');
+  }
+
+  function scrollBottom() {
+    requestAnimationFrame(() => {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g, '<br>');
+  }
+
+  // ─── Init ─────────────────────────────────────────────────────────────────
+  pollHealth();
+  pollDocuments();
+  setInterval(pollHealth, 30_000);
+  setInterval(pollDocuments, 60_000);
+  questionEl.focus();
+</script>
+</body>
+</html>

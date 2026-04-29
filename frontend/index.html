@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HR Policy Assistant</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      padding: 15px;
+      background: #1e293b;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .msg {
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 75%;
+      line-height: 1.4;
+    }
+
+    .user {
+      background: #38bdf8;
+      color: black;
+      margin-left: auto;
+    }
+
+    .bot {
+      background: #1e293b;
+    }
+
+    .meta {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 5px;
+    }
+
+    .input-box {
+      display: flex;
+      padding: 10px;
+      background: #1e293b;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      margin-left: 10px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #38bdf8;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:disabled {
+      background: #64748b;
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      background: #0ea5e9;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<header>HR Policy Assistant</header>
+
+<div id="chat"></div>
+
+<div class="input-box">
+  <input id="question" placeholder="Ask your HR question..." />
+  <button id="sendBtn" onclick="ask()">Send</button>
+</div>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/api/query";
+
+function addMessage(text, type) {
+  const chat = document.getElementById("chat");
+  const div = document.createElement("div");
+  div.className = "msg " + type;
+  div.innerHTML = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+async function ask() {
+  const input = document.getElementById("question");
+  const button = document.getElementById("sendBtn");
+
+  const question = input.value.trim();
+  if (!question) return;
+
+  addMessage(question, "user");
+  input.value = "";
+
+  const loading = addMessage("⏳ Thinking...", "bot");
+
+  button.disabled = true;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        question: String(question)
+      })
+    });
+
+    const raw = await response.text();
+    console.log("RAW RESPONSE:", raw);
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status} - ${raw}`);
+    }
+
+    const data = JSON.parse(raw);
+
+    let answer = data.answer || "No answer returned";
+
+    let meta = `
+      <div class="meta">
+        Confidence: ${data.confidence ?? 0} |
+        Latency: ${data.latency_ms ?? 0} ms
+      </div>
+    `;
+
+    let sources = "";
+    if (data.sources && data.sources.length > 0) {
+      sources += "<br><b>Sources:</b><ul>";
+      data.sources.forEach(s => {
+        sources += `<li>${s.document} - ${s.section}</li>`;
+      });
+      sources += "</ul>";
+    }
+
+    loading.innerHTML = answer + meta + sources;
+
+  } catch (error) {
+    console.error("FETCH ERROR:", error);
+    loading.innerHTML = "❌ Error: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// Press Enter to send
+document.getElementById("question").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    ask();
+  }
+});
+</script>
+
+</body>
+</html>
